@@ -1,0 +1,151 @@
+const renderer = new marked.Renderer();
+renderer.link = function (href, title, text) {
+  return `<a target="_blank" href="${href}">${text}` + '</a>';
+}
+// ALLOWS LINE BREAKS WITH RETURN BUTTON
+marked.setOptions({
+        renderer: renderer,
+        gfm: true,
+        tables: true,
+        breaks: true,
+        smartLists: false
+});
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    /*isMaxed determines wether a window is already maximised*/
+    this.state = {
+      isMaxed: false,
+      button: 0,
+      editor: ""
+    }
+  }
+  
+  /*Sends placeholder text to previewer on load*/
+  componentDidMount() {
+    window.addEventListener("load", this.handleChange)
+  }
+  
+  /*Sets the state of editor to the text within the textarea*/
+  handleChange = () => {
+    let input = document.getElementById("editor").value
+    this.setState({
+      editor: input
+    })
+  }
+  
+  /*Decides which of the two windows to max/minimise*/
+  onChange1 = async () => {
+     await this.setState({
+      button: 1
+    })
+     this.toggleMaximise()
+  }
+  
+  onChange2 = async () => {
+     await this.setState({
+      button: 2
+    })
+     this.toggleMaximise()
+  }
+  
+  
+  /*toggleMaximise determines which button is calling the function and then wether it needs to be maximised or minimised, applying appropriate stylings for each case*/
+  toggleMaximise = (state) => {
+    if(this.state.button === 1) {
+      var otherContainer = "container" + 2
+    }else{
+      var otherContainer = "container" + 1
+    }
+    
+    var target = "expand-arrows" + this.state.button
+    const tgt = document.getElementById(target)
+    if(!this.state.isMaxed){
+      /*If not previously maximised, we now are*/
+      this.setState({
+        isMaxed: true
+      })
+      /*expand arrows become compress. targeted container becomes maximised, other container invisible*/
+      tgt.classList.remove("fa-expand-arrows-alt")
+      tgt.classList.add("fa-compress-arrows-alt")
+      document.getElementById("container" + this.state.button).className += " maximised"
+      document.getElementById(otherContainer).className += " minimised"
+    }else{
+      /*Was previously maximised, we now are not*/
+      this.setState({
+        isMaxed: false
+      })
+      /*compress arrows become expand again.*/ 
+      tgt.classList.add("fa-expand-arrows-alt")
+      tgt.classList.remove("fa-compress-arrows-alt")
+      /*targeted container maximised removed, other container now visible*/
+      document.getElementById("container" + this.state.button).className -= "maximised"
+      document.getElementById(otherContainer).className -= "minimised"
+    }
+  }
+  
+  render(){
+    return(
+      <div id = "app-container">
+        <div id = "container1" class = "smaller-div">
+        <div id = "header">
+          <h3><i class="fa fa-flask"></i>   Editor</h3>
+          <i id = "expand-arrows1" class="fa fa-expand-arrows-alt fa-1x" onClick = {this.onChange1}></i>
+        </div>
+        <textarea id = "editor" class = "no-resize" style = {editorFont}  onKeyUp = {this.handleChange} >{placeholder}</textarea>
+      </div>
+        
+        <div id = "container2">
+        <div id = "header">
+          <h3><i class="fa fa-flask"></i>   Previewer</h3>
+          <i id = "expand-arrows2" class="fa fa-expand-arrows-alt fa-1x" onClick = {this.onChange2}></i>
+        </div>
+        <span id = "preview" class = "no-resize" style = {previewFont} dangerouslySetInnerHTML={{ __html: marked(this.state.editor, { renderer: renderer })}}/>
+      </div>
+        
+      </div>
+    )
+  }
+}
+var isMaxed = false
+const maximised = {
+  width: "90vw",
+  height: "90vh"
+}
+const minimised = {
+  display: "none"
+}
+const editorFont = {
+  fontFamily: "Source Code Pro"
+}
+const previewFont = {
+  fontFamily: "Soure Serif Pro"
+}
+
+const placeholder = 
+`# a header (H1 size)
+
+## a sub header (H2 size)
+
+[a link](codepen.io)
+
+\`inline code\`
+
+\`\`\`
+a code
+block
+\`\`\`
+
+* a list item
+
+> a blockquote 
+
+![fcc logo](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/FCC_New_Logo.svg/1200px-FCC_New_Logo.svg.png) 
+
+**and bolded text.**
+`
+
+//render     
+const app = document.getElementById('app')
+ReactDOM.render(<App />, app);
